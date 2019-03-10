@@ -67,7 +67,7 @@ def command_code_parser(reader):
     command_code_d = {}
     for line in reader:
         line = line.strip()
-        if line.startswith(name):
+        if line.startswith('name'):
             name = line.strip().split(' ')[-1]
         elif name and line:
             codes += list(map(int, code_regexp.findall(line)))
