@@ -16,13 +16,14 @@ def call_mode2(device, timeout=5):
     resp = sub.run(cmd, shell=True, stdout=sub.PIPE)
     elapsed = 0
     while True:
-        if KeyboardInterrupt:
+        try:
+            time.sleep(0.1)
+            elapsed += 0.1
+            if elapsed == timeout:
+                print('Timeout')
+        except KeyboardInterrupt:
             resp.send_signal(signal.SIGINT)
-            break
-        time.sleep(0.1)
-        elapsed += 0.1
-        if elapsed == timeout:
-            print('Timeout')        
+            break   
     return resp.stdout.decode('utf-8')
 
 def mode2_to_array(mode2_output):
