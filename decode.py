@@ -2,6 +2,7 @@ import os
 import time
 import subprocess as sub
 import signal
+import re
 import argparse
 from collections import namedtuple
 from operator import itemgetter as iget
