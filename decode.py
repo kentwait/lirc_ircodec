@@ -37,7 +37,7 @@ def raw_array_to_means(raw_codes_array):
     # TODO: Assert all signals have equal lengths
     if raw_codes_array and \
         not all(len(raw_codes_array[0]) == len(a) for a in raw_codes_array):
-        raise ValueError('raw codes have different lengths')
+        raise ValueError('Raw codes have different lengths. Try again.')
     return [
         sum(map(iget(i), raw_codes_array)) // len(raw_codes_array)
         for i in range(len(raw_codes_array[0]))
@@ -89,8 +89,6 @@ if __name__ == '__main__':
     temp_output = 'mode2.temp.out'
     if args.output_raw:
         temp_output = args.output_raw
-    if os.path.exists(temp_output):
-        os.remove(temp_output)
     command_code_d = {}
     while True:
         while True:
@@ -115,6 +113,8 @@ if __name__ == '__main__':
             '  Press Ctrl+C when finished.'
         )
         temp_output += '.' + command
+        if os.path.exists(temp_output):
+            os.remove(temp_output)
         cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device,temp_output)
         p = sub.Popen(cmd, shell=True)
         elapsed = 0
@@ -130,8 +130,8 @@ if __name__ == '__main__':
                 pass
             except KeyboardInterrupt:
                 p.send_signal(signal.SIGINT)
-                break
                 print('Done.\n')
+                break                
             
         with open(temp_output, 'r') as f:
             raw_out = f.read()
@@ -143,7 +143,7 @@ if __name__ == '__main__':
             )
         raw_codes_array = mode2_to_array(raw_out)
         
-        print('Processing codes...', end=' ')
+        print('\nProcessing codes...', end=' ')
         mean_codes = raw_array_to_means(raw_codes_array)
         print('Done.')
 
