@@ -150,12 +150,12 @@ if __name__ == '__main__':
         print('  gap       28205', file=writer)  # long space after trailing pulse
         print('  frequency 38000', file=writer)  # frequency in Hz
         # Commands
-        print('')
+        print('', file=writer)
         print('  begin raw_codes\n', file=writer)
         for command, codes in command_code_d.items():
             print('   name {}'.format(command), file=writer)
             print(codes_to_lines(codes, prefix_spaces=3), file=writer)
-            print('\n', file=writer)
+            print('', file=writer)
 
         print('  end raw_codes\n', file=writer)
         print('end remote', file=writer)
