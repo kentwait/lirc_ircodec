@@ -268,7 +268,7 @@ if __name__ == '__main__':
                 for command in command_code_d.keys()
             ]
             curr.executemany(
-                'INSERT INTO IrCommands '
+                'INSERT INTO IrCommandLookup'
                 '(location, device_type, device_name, command_id) '
                 'VALUES (?, ?, ?, ?);', 
                 entries
