@@ -27,7 +27,7 @@ def mode2_to_array(mode2_output):
     # Count number of \n\n
     count = raw_codes.count('\n\n')
     raw_codes = list(map(int, raw_codes.split()))
-    sig_len = raw_codes // count
+    sig_len = len(raw_codes) // count
     return [
         raw_codes[(i*sig_len)+1:(i*sig_len)+sig_len]
         for i in range(count)
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             raw_out = f.read()
         if not args.output_raw:
             os.remove(temp_output)
-        if raw_out:
+        if not raw_out:
             raise ValueError(
                 'No IR codes detected by mode2. Check gpio_in_pin value.'
             )
