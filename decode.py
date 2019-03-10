@@ -112,7 +112,7 @@ if __name__ == '__main__':
         print('Press "{}" on the remote'.format(command))
         print(
             '  Press the key multiple times (3+) in slow succession for best results.'
-            '  Press Ctrl+C when finished.'.format(args.timeout)
+            '  Press Ctrl+C when finished.'
         )
         temp_output += '.' + command
         cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device,temp_output)
