@@ -6,20 +6,20 @@ import argparse
 from collections import namedtuple
 from operator import itemgetter as iget
 
-import fcntl
+# import fcntl
 
 PulseGap = namedtuple('PulseGap', 'pulse gap')
 PulseGap.__new__.__defaults__ = (0, 0)
 
 
-def non_block_read(output):
-    fd = output.fileno()
-    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-    fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-    try:
-        return output.read()
-    except:
-        return ''
+# def non_block_read(output):
+#     fd = output.fileno()
+#     fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+#     fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+#     try:
+#         return output.read()
+#     except:
+#         return ''
 
 def mode2_to_array(mode2_output):
     # Remove first line "Using driver default on device /dev/lirc0"
@@ -76,10 +76,10 @@ if __name__ == '__main__':
         '--output_raw', type=str, default='',
         help='Filename for raw mode2 output'
     )
-    parser.add_argument(
-        '--timeout', type=int, default=3,
-        help='IR receiver timeout'
-    )
+    # parser.add_argument(
+    #     '--timeout', type=int, default=3,
+    #     help='IR receiver timeout'
+    # )
     parser.add_argument(
         'config_file', type=str,
         help='LIRC configuration filename'
@@ -93,14 +93,26 @@ if __name__ == '__main__':
         os.remove(temp_output)
     command_code_d = {}
     while True:
-        command = input('Enter command name (or Enter to quit): ')
+        while True:
+            command = input('Enter command name (or Enter to quit): ')
+            if command and command in command_code_d.keys():
+                print(
+                    '  Command "{}" already exists. Try again.'.format(command)
+                )
+            else:
+                break
+        if ' ' in command:
+            new_command = command.replace(' ', '-')
+            print('  Command "{}" contains spaces.'.format(command))
+            print('  Command will be renamed into "{}".'.format(new_command))
+            command = new_command
         if not command:
             break
 
         print('Press "{}" on the remote'.format(command))
         print(
-            '  Detection will timeout in {}s\n'
-            '  (Ctrl+C to halt)'.format(args.timeout)
+            '  Press the key multiple times (3+) in slow succession for best results.'
+            '  Press Ctrl+C when finished.'.format(args.timeout)
         )
         temp_output += '.' + command
         cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device,temp_output)
@@ -108,16 +120,18 @@ if __name__ == '__main__':
         elapsed = 0
         while True:
             try:
-                if elapsed == args.timeout:
-                    print('{}s'.format(args.timeout))
-                    print('Timeout')
-                elif elapsed % 1 == 0.0:
-                    print('{}..'.format(int(args.timeout-elapsed)), end='')
-                time.sleep(0.1)
-                elapsed += 0.1
+                # if elapsed == args.timeout:
+                #     print('{}s'.format(args.timeout))
+                #     print('Timeout')
+                # elif elapsed % 1 == 0.0:
+                #     print('{}..'.format(int(args.timeout-elapsed)), end='')
+                # time.sleep(0.1)
+                # elapsed += 0.1
+                pass
             except KeyboardInterrupt:
                 p.send_signal(signal.SIGINT)
                 break
+                print('Done.\n')
             
         with open(temp_output, 'r') as f:
             raw_out = f.read()
