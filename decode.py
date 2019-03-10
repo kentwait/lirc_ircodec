@@ -59,6 +59,24 @@ def codes_to_lines(codes, prefix_spaces=2):
         lines.append(' '*prefix_spaces + line)
     return '\n'.join(lines)
 
+def command_code_parser(reader):
+    name = None
+    codes = []
+    code_regexp = re.compile(r'\d+')
+    command_code_d = {}
+    for line in reader:
+        line = line.strip()
+        if line.startswith(name):
+            name = line.strip().split(' ')[-1]
+        elif name and line:
+            codes += list(map(int, code_regexp.findall(line)))
+        elif name and not line:
+            command_code_d[name] = codes
+            name = None
+            codes = []
+    return command_code_d
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         'decode.py',
@@ -81,6 +99,10 @@ if __name__ == '__main__':
     #     help='IR receiver timeout'
     # )
     parser.add_argument(
+        '--overwrite', type=bool, default=False,
+        help='Overwrite LIRC configuration file if it exists'
+    )
+    parser.add_argument(
         'config_file', type=str,
         help='LIRC configuration filename'
     )
@@ -89,7 +111,15 @@ if __name__ == '__main__':
     temp_output = 'mode2.temp.out'
     if args.output_raw:
         temp_output = args.output_raw
+
     command_code_d = {}
+    if os.path.exists(args.config_file):
+        if args.overwrite:
+            os.remove(args.config_file)
+        else:
+            with open(args.config_file, 'r') as reader:
+                command_code_d = command_code_parser(reader)
+
     while True:
         while True:
             command = input('Enter command name (or Enter to quit): ')
@@ -166,6 +196,7 @@ if __name__ == '__main__':
         # Commands
         print('', file=writer)
         print('  begin raw_codes\n', file=writer)
+
         for command, codes in command_code_d.items():
             print('   name {}'.format(command), file=writer)
             print(codes_to_lines(codes, prefix_spaces=3), file=writer)
