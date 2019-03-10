@@ -89,6 +89,8 @@ if __name__ == '__main__':
     temp_output = 'mode2.temp.out'
     if args.output_raw:
         temp_output = args.output_raw
+    if os.path.exists(temp_output):
+        os.remove(temp_output)
     command_code_d = {}
     while True:
         command = input('Enter command name (or Enter to quit): ')
@@ -100,7 +102,8 @@ if __name__ == '__main__':
             '  Detection will timeout in {}s\n'
             '  (Ctrl+C to halt)'.format(args.timeout)
         )
-        cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device, temp_output)
+        temp_output += '.' + command
+        cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device,temp_output)
         p = sub.Popen(cmd, shell=True)
         elapsed = 0
         while True:
