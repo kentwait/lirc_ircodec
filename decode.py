@@ -76,12 +76,12 @@ if __name__ == '__main__':
         help='Name of remote control'
     )
     parser.add_argument(
-        '--commands', '-c', type=str, nargs='+',
-        help='Names of comamnds to record'
-    )
-    parser.add_argument(
         '--output_raw', type=str, default='',
         help='Filename for raw mode2 output'
+    )
+    parser.add_argument(
+        '--timeout', type=int, default=5,
+        help='IR receiver timeout'
     )
     parser.add_argument(
         'config_file', type=str,
@@ -90,8 +90,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     command_code_d = {}
-    for command in args.commands:
-        print('Press "{}"'.format(command))
+    while True:
+        command = input('Enter command name (or Enter to quit): ')
+        if not command:
+            break
+
+        print('Press "{}" on the remote'.format(command))
+        print(
+            '  Detection will timeout in {}s\n'
+            '  (Ctrl+C to halt)'.format(args.timeout)
+        )
         raw_out = call_mode2(args.lirc_device)
         if args.output_raw:
             with open(args.output_raw, 'a') as writer:
@@ -107,7 +115,7 @@ if __name__ == '__main__':
         print('Done.')
 
         command_code_d[command] = mean_codes
-        # Group codes into pulse-gap pairs
+        # TODO: Group codes into pulse-gap pairs
 
     print('Creating LIRCD file...',)
     # Refer to http://www.lirc.org/html/lircd.conf.html
