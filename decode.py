@@ -75,6 +75,9 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
+    temp_output = 'mode2.temp.out'
+    if args.output_raw:
+        temp_output = args.output_raw
     command_code_d = {}
     while True:
         command = input('Enter command name (or Enter to quit): ')
@@ -86,8 +89,8 @@ if __name__ == '__main__':
             '  Detection will timeout in {}s\n'
             '  (Ctrl+C to halt)'.format(args.timeout)
         )
-        cmd = 'mode2 -d {}'.format(args.lirc_device)
-        resp = sub.run(cmd, shell=True, stdout=sub.PIPE)
+        cmd = 'mode2 -d {} > {}'.format(args.lirc_device, temp_output)
+        p = sub.Popen(cmd, shell=True)
         elapsed = 0
         while True:
             try:
@@ -99,12 +102,12 @@ if __name__ == '__main__':
                 elif elapsed % 1 == 0:
                     print('.', end='')
             except KeyboardInterrupt:
-                resp.send_signal(signal.SIGINT)
+                p.send_signal(signal.SIGINT)
                 break   
-        raw_out = resp.stdout.decode('utf-8')
-        if args.output_raw:
-            with open(args.output_raw, 'a') as writer:
-                print(raw_out, file=writer)
+        with open(temp_output, 'r') as f:
+            raw_out = f.read()
+        if not args.output_raw:
+            os.remove(temp_output)
         if raw_out:
             raise ValueError(
                 'No IR codes detected by mode2. Check gpio_in_pin value.'
