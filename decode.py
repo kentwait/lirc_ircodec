@@ -100,7 +100,7 @@ if __name__ == '__main__':
             '  (Ctrl+C to halt)'.format(args.timeout)
         )
         cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device, temp_output)
-        p = sub.Popen(cmd, shell=True, stdout=sub.PIPE)
+        p = sub.Popen(cmd, shell=True)
         elapsed = 0
         while True:
             try:
@@ -109,11 +109,12 @@ if __name__ == '__main__':
                     print('Timeout')
                 elif elapsed % 1 == 0.0:
                     print('{}..'.format(int(args.timeout-elapsed)), end='')
+                time.sleep(0.1)
+                elapsed += 0.1
             except KeyboardInterrupt:
                 p.send_signal(signal.SIGINT)
                 break
-            time.sleep(0.1)
-            elapsed += 0.1
+            
         with open(temp_output, 'r') as f:
             raw_out = f.read()
         if not args.output_raw:
