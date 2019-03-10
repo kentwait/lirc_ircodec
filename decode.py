@@ -11,21 +11,6 @@ PulseGap = namedtuple('PulseGap', 'pulse gap')
 PulseGap.__new__.__defaults__ = (0, 0)
 
 
-def call_mode2(device, timeout=5):
-    cmd = 'mode2 -d {}'.format(device)
-    resp = sub.run(cmd, shell=True, stdout=sub.PIPE)
-    elapsed = 0
-    while True:
-        try:
-            time.sleep(0.1)
-            elapsed += 0.1
-            if elapsed == timeout:
-                print('Timeout')
-        except KeyboardInterrupt:
-            resp.send_signal(signal.SIGINT)
-            break   
-    return resp.stdout.decode('utf-8')
-
 def mode2_to_array(mode2_output):
     # Remove first line "Using driver default on device /dev/lirc0"
     raw_codes = mode2_output.split('\n', maxsplit=1)[1]
@@ -101,7 +86,22 @@ if __name__ == '__main__':
             '  Detection will timeout in {}s\n'
             '  (Ctrl+C to halt)'.format(args.timeout)
         )
-        raw_out = call_mode2(args.lirc_device)
+        cmd = 'mode2 -d {}'.format(args.lirc_device)
+        resp = sub.run(cmd, shell=True, stdout=sub.PIPE)
+        elapsed = 0
+        while True:
+            try:
+                time.sleep(0.1)
+                elapsed += 0.1
+                if elapsed == args.timeout:
+                    print('{}s'.format(args.timeout))
+                    print('Timeout')
+                elif elapsed % 1 == 0:
+                    print('.', end='')
+            except KeyboardInterrupt:
+                resp.send_signal(signal.SIGINT)
+                break   
+        raw_out = resp.stdout.decode('utf-8')
         if args.output_raw:
             with open(args.output_raw, 'a') as writer:
                 print(raw_out, file=writer)
