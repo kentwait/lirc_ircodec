@@ -125,7 +125,7 @@ if __name__ == '__main__':
                 #     print('Timeout')
                 # elif elapsed % 1 == 0.0:
                 #     print('{}..'.format(int(args.timeout-elapsed)), end='')
-                # time.sleep(0.1)
+                time.sleep(0.1)
                 # elapsed += 0.1
                 pass
             except KeyboardInterrupt:
