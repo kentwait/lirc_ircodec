@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import time
 import subprocess as sub
 import signal
@@ -134,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--database', '-db', type=str,
         help='Parse --remote formatted as '
-            '<location>.<device_type> into columns'
+            '<location>/<device_type> into columns'
             'and command as <command_id>'
     )
     parser.add_argument(
@@ -259,7 +260,13 @@ if __name__ == '__main__':
                 conn.commit()
 
             # Add entries to database
-            location, device_type = args.remote.split('.')
+            try:
+                location, device_type = args.remote.split('/')
+            except ValueError:
+                print('--remote value must be formatted as '
+                    '<location>/<device_type> to use '
+                    'automatic database creation: {}'.format(args.remote))
+                sys.exit(-1)
             device_name = '-'.join([location, device_type])
             entries = [
                 (
