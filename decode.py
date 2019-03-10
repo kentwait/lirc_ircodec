@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import time
 import subprocess as sub
@@ -6,8 +7,35 @@ import re
 import argparse
 from collections import namedtuple
 from operator import itemgetter as iget
+import sqlite3 as sq
+
 
 # import fcntl
+
+CREATE_TABLE = """
+CREATE TABLE IF NOT EXISTS IrCommandLookup (
+    id integer PRIMARY KEY,
+    location text NOT NULL,
+    device_type text NOT NULL,
+    device_name text NOT NULL,
+    command_id text NOT NULL
+); """
+
+CREATE_DEVICE_ID_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_device_id
+ON IrCommandLookup (location, device_type, device_name);
+"""
+
+CREATE_DEVICE_NAME_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_device_name
+ON IrCommandLookup (device_name);
+"""
+
+CREATE_TYPE_COMMAND_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_type_command_id
+ON IrCommandLookup (location, device_type, command_id);
+"""
+
 
 PulseGap = namedtuple('PulseGap', 'pulse gap')
 PulseGap.__new__.__defaults__ = (0, 0)
@@ -102,6 +130,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--overwrite', type=bool, default=False,
         help='Overwrite LIRC configuration file if it exists'
+    )
+    parser.add_argument(
+        '--database', '-db', type=str,
+        help='Parse --remote formatted as '
+            '<location>.<device_type> into columns'
+            'and command as <command_id>'
     )
     parser.add_argument(
         'config_file', type=str,
@@ -208,6 +242,38 @@ if __name__ == '__main__':
     
     print('LIRCD config file saved to {}'.format(args.config_file))
     print('Done.')
+
+    if args.database:
+        with sq.connect(args.database) as conn:
+            curr = conn.cursor()
+            # Create IrCommand if it doesnt exist
+            count = curr.execute(
+                'SELECT count(*) FROM sqlite_master WHERE type="table" '
+                'AND name="IrCommands";'
+            ).fetchone()[0]
+            if not count:
+                curr.execute(CREATE_TABLE)
+                curr.execute(CREATE_DEVICE_ID_INDEX)
+                curr.execute(CREATE_DEVICE_NAME_INDEX)
+                curr.execute(CREATE_TYPE_COMMAND_INDEX)
+                conn.commit()
+
+            # Add entries to database
+            location, device_type = args.remote.split('.')
+            device_name = '-'.join([location, device_type])
+            entries = [
+                (
+                    location, device_type, device_name, command
+                )
+                for command in command_code_d.keys()
+            ]
+            curr.executemany(
+                'INSERT INTO IrCommands '
+                '(location, device_type, device_name, command_id) '
+                'VALUES (?, ?, ?, ?);', 
+                entries
+            )
+            conn.commit()
 
     print('\n---')
     print('Finished.')
