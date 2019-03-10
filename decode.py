@@ -54,7 +54,7 @@ def means_to_pulse_gap_array(mean_codes):
 def codes_to_lines(codes, prefix_spaces=2):
     lines = []
     for i in range(0, len(codes), 3):
-        line = ''.join(['{0:>8}'.format(code) for code in codes[1:i+3]])
+        line = ''.join(['{0:>8}'.format(code) for code in codes[i:i+3]])
         lines.append(' '*prefix_spaces + line)
     return '\n'.join(lines)
 
