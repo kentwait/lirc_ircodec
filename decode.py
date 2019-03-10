@@ -6,10 +6,20 @@ import argparse
 from collections import namedtuple
 from operator import itemgetter as iget
 
+import fcntl
 
 PulseGap = namedtuple('PulseGap', 'pulse gap')
 PulseGap.__new__.__defaults__ = (0, 0)
 
+
+def non_block_read(output):
+    fd = output.fileno()
+    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+    try:
+        return output.read()
+    except:
+        return ''
 
 def mode2_to_array(mode2_output):
     # Remove first line "Using driver default on device /dev/lirc0"
@@ -66,7 +76,7 @@ if __name__ == '__main__':
         help='Filename for raw mode2 output'
     )
     parser.add_argument(
-        '--timeout', type=int, default=5,
+        '--timeout', type=int, default=3,
         help='IR receiver timeout'
     )
     parser.add_argument(
@@ -89,21 +99,21 @@ if __name__ == '__main__':
             '  Detection will timeout in {}s\n'
             '  (Ctrl+C to halt)'.format(args.timeout)
         )
-        cmd = 'mode2 -d {} > {}'.format(args.lirc_device, temp_output)
-        p = sub.Popen(cmd, shell=True)
+        cmd = 'mode2 -m -d {} > {}'.format(args.lirc_device, temp_output)
+        p = sub.Popen(cmd, shell=True, stdout=sub.PIPE)
         elapsed = 0
         while True:
             try:
-                time.sleep(0.1)
-                elapsed += 0.1
                 if elapsed == args.timeout:
                     print('{}s'.format(args.timeout))
                     print('Timeout')
-                elif elapsed % 1 == 0:
-                    print('.', end='')
+                elif elapsed % 1 == 0.0:
+                    print('{}..'.format(int(args.timeout-elapsed)), end='')
             except KeyboardInterrupt:
                 p.send_signal(signal.SIGINT)
-                break   
+                break
+            time.sleep(0.1)
+            elapsed += 0.1
         with open(temp_output, 'r') as f:
             raw_out = f.read()
         if not args.output_raw:
